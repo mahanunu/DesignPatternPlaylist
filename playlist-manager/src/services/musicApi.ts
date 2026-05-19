@@ -1,11 +1,16 @@
 import type { Song } from "../types";
 
 export async function fetchSongs(): Promise<Song[]> {
+
   const res = await fetch(
     "https://itunes.apple.com/search?term=rock&entity=song&limit=10"
   );
 
   const data = await res.json();
+
+  if (!data.results || data.results.length === 0) {
+    return [];
+  }
 
   return data.results.map((item: any) => ({
     id: item.trackId?.toString() ?? crypto.randomUUID(),

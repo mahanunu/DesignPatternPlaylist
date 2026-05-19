@@ -1,29 +1,36 @@
 import { useEffect, useState } from "react";
 import { eventBus } from "../observer/EventBus";
 import { EVENTS } from "../observer/events";
+import { NotificationFactory } from "../factories/NotificationFactory";
 
-type Notification = {
-  id: string;
-  message: string;
-};
+import type { Notification } from "../factories/NotificationFactory";
 
 export default function Notifications() {
 
   const [notifications, setNotifications] =
     useState<Notification[]>([]);
 
+  const add = (notif: Notification) => {
+
+    setNotifications((prev) => [...prev, notif]);
+
+    setTimeout(() => {
+      setNotifications((prev) => prev.slice(1));
+    }, 3000);
+  };
+
   useEffect(() => {
 
     const onSongAdded = () => {
-      add("🎵 Song added !");
+      add(NotificationFactory.success("🎵 Song added !"));
     };
 
     const onSongDeleted = () => {
-      add("🗑️ Song deleted !");
+      add(NotificationFactory.error("🗑️ Song deleted !"));
     };
 
     const onPlaylistCreated = () => {
-      add("📁 Playlist created !");
+      add(NotificationFactory.info("📁 Playlist created !"));
     };
 
     eventBus.on(EVENTS.SONG_ADDED, onSongAdded);
@@ -38,27 +45,11 @@ export default function Notifications() {
 
   }, []);
 
-  const add = (message: string) => {
-
-    const notif: Notification = {
-      id: crypto.randomUUID(),
-      message
-    };
-
-    setNotifications((prev) => [...prev, notif]);
-
-    setTimeout(() => {
-      setNotifications((prev) =>
-        prev.slice(1)
-      );
-    }, 3000);
-  };
-
   return (
     <div className="notifications">
 
       {notifications.map((n) => (
-        <div key={n.id}>
+        <div key={n.id} className={n.type}>
           {n.message}
         </div>
       ))}

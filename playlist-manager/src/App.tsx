@@ -40,23 +40,46 @@ function App() {
 
   const getPlaylists = () => playlists;
 
-  useEffect(() => {
+useEffect(() => {
 
-    async function load() {
+  async function load() {
 
-      const data =
-        await repo.getAll();
+    const stored = await repo.getAll();
 
-      setPlaylists(data);
-
-      if (data.length > 0) {
-        setSelectedPlaylistId(data[0].id);
-      }
+    if (stored.length > 0) {
+      setPlaylists(stored);
+      setSelectedPlaylistId(stored[0].id);
+      return;
     }
 
-    load();
+    const res = await fetch(
+      "/api/lookup.php?i=112024"
+    );
 
-  }, []);
+    const data = await res.json();
+
+    const songs =
+      (data?.track || []).map((t: any) => ({
+        id: t.idTrack,
+        title: t.strTrack,
+        artist: t.strArtist
+      }));
+
+    const apiPlaylist: Playlist = {
+      id: "itunes-default",
+      name: "Trending (iTunes)",
+      songs,
+      isCustom: false
+    };
+
+    setPlaylists([apiPlaylist]);
+    setSelectedPlaylistId(apiPlaylist.id);
+    repo.save([apiPlaylist]);
+  }
+
+  load();
+
+}, []);
 
   // ➕ ADD PLAYLIST (COMMAND)
   const addPlaylist = (name: string) => {
@@ -148,7 +171,7 @@ function App() {
 
   return (
     <div className="app">
-      
+
       <Notifications />
 
       <h1>
