@@ -12,6 +12,10 @@ import type {
 
 import { PlaylistRepository } from "./repositories/PlaylistRepository";
 
+import { commandManager } from "./commands/CommandManager";
+import { AddSongCommand } from "./commands/AddSongCommand";
+import { DeleteSongCommand } from "./commands/DeleteSongCommand";
+
 import AddPlaylistForm from "./components/AddPlaylistForm";
 import PlaylistList from "./components/PlaylistList";
 import PlaylistDetails from "./components/PlaylistDetails";
@@ -26,11 +30,12 @@ function App() {
     setSelectedPlaylistId
   ] = useState<string | null>(null);
 
-  // 📦 Repository instance
   const repo =
     new PlaylistRepository();
 
-  // 🎧 LOAD DATA VIA REPOSITORY
+  // 🔥 getter IMPORTANT pour commands
+  const getPlaylists = () => playlists;
+
   useEffect(() => {
 
     async function load() {
@@ -51,10 +56,8 @@ function App() {
 
   }, []);
 
-  // ➕ ADD PLAYLIST
-  const addPlaylist = (
-    name: string
-  ) => {
+  // ➕ ADD PLAYLIST (pas command)
+  const addPlaylist = (name: string) => {
 
     const newPlaylist: Playlist = {
       id: crypto.randomUUID(),
@@ -72,70 +75,47 @@ function App() {
     repo.save(updated);
   };
 
-  // ➕ ADD SONG
+  // 🎵 ADD SONG (COMMAND)
   const addSong = (
     playlistId: string,
     song: Song
   ) => {
 
-    const updated = playlists.map(
-      (playlist) => {
+    const command =
+      new AddSongCommand(
+        getPlaylists,
+        setPlaylists,
+        playlistId,
+        song
+      );
 
-        if (
-          playlist.id !== playlistId
-        ) {
-          return playlist;
-        }
+    commandManager.execute(command);
 
-        return {
-          ...playlist,
-          songs: [
-            ...playlist.songs,
-            song
-          ]
-        };
-      }
-    );
-
-    setPlaylists(updated);
-    repo.save(updated);
+    repo.save(getPlaylists());
   };
 
-  // ❌ DELETE SONG
+  // ❌ DELETE SONG (COMMAND)
   const deleteSong = (
     playlistId: string,
     songId: string
   ) => {
 
-    const updated = playlists.map(
-      (playlist) => {
+    const command =
+      new DeleteSongCommand(
+        getPlaylists,
+        setPlaylists,
+        playlistId,
+        songId
+      );
 
-        if (
-          playlist.id !== playlistId
-        ) {
-          return playlist;
-        }
+    commandManager.execute(command);
 
-        return {
-          ...playlist,
-          songs: playlist.songs.filter(
-            (song) =>
-              song.id !== songId
-          )
-        };
-      }
-    );
-
-    setPlaylists(updated);
-    repo.save(updated);
+    repo.save(getPlaylists());
   };
 
-  // 🎯 SELECTED PLAYLIST
   const selectedPlaylist =
     playlists.find(
-      (playlist) =>
-        playlist.id ===
-        selectedPlaylistId
+      p => p.id === selectedPlaylistId
     ) || null;
 
   return (
@@ -145,6 +125,10 @@ function App() {
         Playlist Manager
       </h1>
 
+      <button onClick={() => commandManager.undo()}>
+        Undo
+      </button>
+
       <AddPlaylistForm
         onAdd={addPlaylist}
       />
@@ -153,18 +137,12 @@ function App() {
 
         <PlaylistList
           playlists={playlists}
-          selectedId={
-            selectedPlaylistId
-          }
-          onSelect={
-            setSelectedPlaylistId
-          }
+          selectedId={selectedPlaylistId}
+          onSelect={setSelectedPlaylistId}
         />
 
         <PlaylistDetails
-          playlist={
-            selectedPlaylist
-          }
+          playlist={selectedPlaylist}
           onAddSong={addSong}
           onDeleteSong={deleteSong}
         />
