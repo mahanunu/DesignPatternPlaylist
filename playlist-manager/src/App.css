@@ -109,3 +109,18 @@ button:hover {
   color: var(--muted);
   font-size: 13px;
 }
+.notifications {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notifications div {
+  background: black;
+  color: white;
+  padding: 10px 14px;
+  border-radius: 8px;
+}

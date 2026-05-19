@@ -47,7 +47,7 @@ function PlaylistDetails({
         {" songs"}
       </p>
 
-      {/* ➕ ADD SONG ONLY FOR CUSTOM PLAYLISTS */}
+
       {playlist.isCustom && (
 
         <AddSongForm
@@ -81,7 +81,6 @@ function PlaylistDetails({
 
             </div>
 
-            {/* ❌ DELETE ONLY FOR CUSTOM PLAYLISTS */}
             {playlist.isCustom && (
 
               <button

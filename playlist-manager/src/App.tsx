@@ -15,6 +15,11 @@ import { PlaylistRepository } from "./repositories/PlaylistRepository";
 import { commandManager } from "./commands/CommandManager";
 import { AddSongCommand } from "./commands/AddSongCommand";
 import { DeleteSongCommand } from "./commands/DeleteSongCommand";
+import { AddPlaylistCommand } from "./commands/AddPlaylistCommand";
+import Notifications from "./components/Notifications";
+
+import { eventBus } from "./observer/EventBus";
+import { EVENTS } from "./observer/events";
 
 import AddPlaylistForm from "./components/AddPlaylistForm";
 import PlaylistList from "./components/PlaylistList";
@@ -33,7 +38,6 @@ function App() {
   const repo =
     new PlaylistRepository();
 
-  // 🔥 getter IMPORTANT pour commands
   const getPlaylists = () => playlists;
 
   useEffect(() => {
@@ -46,9 +50,7 @@ function App() {
       setPlaylists(data);
 
       if (data.length > 0) {
-        setSelectedPlaylistId(
-          data[0].id
-        );
+        setSelectedPlaylistId(data[0].id);
       }
     }
 
@@ -56,7 +58,7 @@ function App() {
 
   }, []);
 
-  // ➕ ADD PLAYLIST (pas command)
+  // ➕ ADD PLAYLIST (COMMAND)
   const addPlaylist = (name: string) => {
 
     const newPlaylist: Playlist = {
@@ -66,10 +68,26 @@ function App() {
       isCustom: true
     };
 
-    const updated = [
-      ...playlists,
-      newPlaylist
-    ];
+    const command =
+      new AddPlaylistCommand(
+        playlists,
+        setPlaylists,
+        newPlaylist
+      );
+
+    commandManager.execute(command);
+
+    repo.save(getPlaylists());
+
+    eventBus.emit(EVENTS.PLAYLIST_CREATED, newPlaylist);
+  };
+
+  // ❌ DELETE PLAYLIST (SIMPLE)
+  const deletePlaylist = (playlistId: string) => {
+
+    const updated = playlists.filter(
+      p => p.id !== playlistId
+    );
 
     setPlaylists(updated);
     repo.save(updated);
@@ -92,6 +110,11 @@ function App() {
     commandManager.execute(command);
 
     repo.save(getPlaylists());
+
+    eventBus.emit(EVENTS.SONG_ADDED, {
+      playlistId,
+      song
+    });
   };
 
   // ❌ DELETE SONG (COMMAND)
@@ -111,6 +134,11 @@ function App() {
     commandManager.execute(command);
 
     repo.save(getPlaylists());
+
+    eventBus.emit(EVENTS.SONG_DELETED, {
+      playlistId,
+      songId
+    });
   };
 
   const selectedPlaylist =
@@ -120,18 +148,21 @@ function App() {
 
   return (
     <div className="app">
+      
+      <Notifications />
 
       <h1>
         Playlist Manager
       </h1>
 
-      <button onClick={() => commandManager.undo()}>
-        Undo
-      </button>
+      
 
       <AddPlaylistForm
         onAdd={addPlaylist}
       />
+      <button onClick={() => commandManager.undo()}>
+        Undo
+      </button>
 
       <div className="content">
 
@@ -146,6 +177,10 @@ function App() {
           onAddSong={addSong}
           onDeleteSong={deleteSong}
         />
+
+        <button onClick={() => deletePlaylist(selectedPlaylistId!)}>
+          Delete playlist
+        </button>
 
       </div>
 

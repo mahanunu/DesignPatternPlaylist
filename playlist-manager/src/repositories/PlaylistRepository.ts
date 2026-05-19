@@ -5,7 +5,7 @@ const STORAGE_KEY = "playlists";
 
 export class PlaylistRepository {
 
-  // 🔥 charge depuis localStorage ou API si vide
+ 
   async getAll(): Promise<Playlist[]> {
 
     const localData =
@@ -15,7 +15,7 @@ export class PlaylistRepository {
       return JSON.parse(localData);
     }
 
-    // fallback API
+
     const songs = await fetchSongs();
 
     const apiPlaylist: Playlist = {
@@ -28,7 +28,7 @@ export class PlaylistRepository {
     return [apiPlaylist];
   }
 
-  // 💾 sauvegarde
+
   save(playlists: Playlist[]) {
     localStorage.setItem(
       STORAGE_KEY,
