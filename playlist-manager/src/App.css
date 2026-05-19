@@ -1,0 +1,111 @@
+:root {
+  --bg: #0f172a;
+  --panel: #111827;
+  --text: #e5e7eb;
+  --muted: #9ca3af;
+  --accent: #6366f1;
+  --accent-hover: #4f46e5;
+  --border: #1f2937;
+}
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, Segoe UI,
+    Roboto, Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.app {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 20px;
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 20px;
+  letter-spacing: 0.5px;
+}
+
+/* layout */
+.content {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 24px;
+  margin-top: 24px;
+}
+
+/* cards */
+.card,
+.content > div {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* playlists */
+.selected {
+  background: rgba(99, 102, 241, 0.15);
+  border-left: 3px solid var(--accent);
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.content div div {
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.content div div:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+/* forms */
+input {
+  width: 100%;
+  padding: 10px;
+  margin: 6px 0;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #0b1220;
+  color: var(--text);
+  outline: none;
+}
+
+input:focus {
+  border-color: var(--accent);
+}
+
+button {
+  background: var(--accent);
+  color: white;
+  border: none;
+  padding: 10px 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+button:hover {
+  background: var(--accent-hover);
+}
+
+/* song list */
+.song {
+  padding: 8px;
+  border-bottom: 1px solid var(--border);
+}
+
+.song:last-child {
+  border-bottom: none;
+}
+
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
