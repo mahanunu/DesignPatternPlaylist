@@ -3,16 +3,14 @@ import {
   useState
 } from "react";
 
-import {
-  fetchSongs
-} from "./services/musicApi";
-
 import "./App.css";
 
 import type {
   Playlist,
   Song
 } from "./types";
+
+import { PlaylistRepository } from "./repositories/PlaylistRepository";
 
 import AddPlaylistForm from "./components/AddPlaylistForm";
 import PlaylistList from "./components/PlaylistList";
@@ -28,54 +26,24 @@ function App() {
     setSelectedPlaylistId
   ] = useState<string | null>(null);
 
-  // 🎧 LOAD ITUNES PLAYLIST
+  // 📦 Repository instance
+  const repo =
+    new PlaylistRepository();
+
+  // 🎧 LOAD DATA VIA REPOSITORY
   useEffect(() => {
 
     async function load() {
 
-      try {
+      const data =
+        await repo.getAll();
 
-        const songs =
-          await fetchSongs();
+      setPlaylists(data);
 
-        const apiPlaylist: Playlist = {
-          id: "itunes-playlist",
-
-          name:
-            "Trending (iTunes)",
-
-          songs,
-
-          isCustom: false
-        };
-
-        setPlaylists([
-          apiPlaylist
-        ]);
-
+      if (data.length > 0) {
         setSelectedPlaylistId(
-          "itunes-playlist"
+          data[0].id
         );
-
-      } catch (err) {
-
-        console.error(
-          "API error:",
-          err
-        );
-
-        setPlaylists([
-          {
-            id: "fallback",
-
-            name:
-              "My Playlist",
-
-            songs: [],
-
-            isCustom: true
-          }
-        ]);
       }
     }
 
@@ -89,20 +57,19 @@ function App() {
   ) => {
 
     const newPlaylist: Playlist = {
-      id:
-        crypto.randomUUID(),
-
+      id: crypto.randomUUID(),
       name,
-
       songs: [],
-
       isCustom: true
     };
 
-    setPlaylists(prev => [
-      ...prev,
+    const updated = [
+      ...playlists,
       newPlaylist
-    ]);
+    ];
+
+    setPlaylists(updated);
+    repo.save(updated);
   };
 
   // ➕ ADD SONG
@@ -111,28 +78,27 @@ function App() {
     song: Song
   ) => {
 
-    setPlaylists(prev =>
-      prev.map(
-        (playlist) => {
+    const updated = playlists.map(
+      (playlist) => {
 
-          if (
-            playlist.id !==
-            playlistId
-          ) {
-            return playlist;
-          }
-
-          return {
-            ...playlist,
-
-            songs: [
-              ...playlist.songs,
-              song
-            ]
-          };
+        if (
+          playlist.id !== playlistId
+        ) {
+          return playlist;
         }
-      )
+
+        return {
+          ...playlist,
+          songs: [
+            ...playlist.songs,
+            song
+          ]
+        };
+      }
     );
+
+    setPlaylists(updated);
+    repo.save(updated);
   };
 
   // ❌ DELETE SONG
@@ -141,33 +107,30 @@ function App() {
     songId: string
   ) => {
 
-    setPlaylists(prev =>
-      prev.map(
-        (playlist) => {
+    const updated = playlists.map(
+      (playlist) => {
 
-          if (
-            playlist.id !==
-            playlistId
-          ) {
-            return playlist;
-          }
-
-          return {
-            ...playlist,
-
-            songs:
-              playlist.songs.filter(
-                (song) =>
-                  song.id !==
-                  songId
-              )
-          };
+        if (
+          playlist.id !== playlistId
+        ) {
+          return playlist;
         }
-      )
+
+        return {
+          ...playlist,
+          songs: playlist.songs.filter(
+            (song) =>
+              song.id !== songId
+          )
+        };
+      }
     );
+
+    setPlaylists(updated);
+    repo.save(updated);
   };
 
-  // 🎯 CURRENT PLAYLIST
+  // 🎯 SELECTED PLAYLIST
   const selectedPlaylist =
     playlists.find(
       (playlist) =>
@@ -190,11 +153,9 @@ function App() {
 
         <PlaylistList
           playlists={playlists}
-
           selectedId={
             selectedPlaylistId
           }
-
           onSelect={
             setSelectedPlaylistId
           }
@@ -204,14 +165,8 @@ function App() {
           playlist={
             selectedPlaylist
           }
-
-          onAddSong={
-            addSong
-          }
-
-          onDeleteSong={
-            deleteSong
-          }
+          onAddSong={addSong}
+          onDeleteSong={deleteSong}
         />
 
       </div>
